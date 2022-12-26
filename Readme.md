@@ -3,7 +3,7 @@ The yaml file syntax includes a section for variables and a list of commands (se
 
 # Easy to write easy to read
 
-```
+```yaml
 {{$bval := "B"}}
 variables: 
   A: {{$bval}}
@@ -41,13 +41,13 @@ extern:
 
 
 To run install commands: 
-```
+```bash
 gomake run --var f=foo --var bar=baz install
 ```
 
 to check how script lookslike after template execute: 
 
-```
+```bash
 gomake run --var f=foo --var bar=baz --dry-run install
 ```
 
