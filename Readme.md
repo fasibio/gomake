@@ -1,8 +1,27 @@
 gomake is a command line tool that allows you to execute bash commands described in a yaml file using gotemplates (Helm Like). 
 The yaml file syntax includes a section for variables and a list of commands (see [example](./gomake.yml)), each with a script section for the commands to be executed and an optional on_failure section to specify commands to be executed in case of failure.
 
-# Easy to write easy to read
+```
+NAME:
+   gomake - A helm like makefile
 
+USAGE:
+   gomake [global options] command [command options] [arguments...]
+
+COMMANDS:
+   autocomplete  Set Autocomplete helper stuff to current shell session
+   ls            List all commands described at gomake yaml file
+   run           Run commands from gomake yml file
+   help, h       Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --makefile value, -f value    gomake file to use (default: "./gomake.yml") [$GOMAKE_MAKEFILE]
+   --executer value, --sh value  Shell to execute gomakefile config (default: "/bin/sh") [$GOMAKE_EXECUTER]
+   --help, -h                    show help (default: false)
+```
+
+# Easy to write easy to read
+Example Script: 
 ```yaml
 {{$bval := "B"}}
 variables: 
@@ -45,27 +64,16 @@ To run install commands:
 gomake run --var f=foo --var bar=baz install
 ```
 
-to check how script lookslike after template execute: 
+to check how script lookslike after template execution: 
 
 ```bash
 gomake run --var f=foo --var bar=baz --dry-run install
 ```
+# Extra functions
 
-```
-NAME:
-   gomake - A helm like makefile
+**include**
+include other commands script or onFailure depands of position of command
 
-USAGE:
-   gomake [global options] command [command options] [arguments...]
+**shell** 
+execute shell command before the main script is running useful to fill Variables
 
-COMMANDS:
-   autocomplete  Set Autocomplete helper stuff to current shell session
-   ls            List all commands described at gomake yaml file
-   run           Run commands from gomake yml file
-   help, h       Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --makefile value, -f value    gomake file to use (default: "./gomake.yml") [$GOMAKE_MAKEFILE]
-   --executer value, --sh value  Shell to execute gomakefile config (default: "/bin/sh") [$GOMAKE_EXECUTER]
-   --help, -h                    show help (default: false)
-```
