@@ -72,8 +72,8 @@ gomake run --var f=foo --var bar=baz --dry-run install
 # Extra functions
 
 **include**
-include other commands script or onFailure depands of position of command
+other commands script or onFailure depands of position of command
 
 **shell** 
-execute shell command before the main script is running useful to fill Variables
+command execution before the main script is running useful to fill Variables
 
