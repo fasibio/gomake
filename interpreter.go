@@ -26,7 +26,7 @@ type Interpreter struct {
 	App            string
 	cmdHandler     command.CommandHandler
 	commandFile    []byte
-	dryRun         bool
+	DryRun         bool
 	ExecuteCommand string
 	executer       string
 	ExtraVariables map[string]string
@@ -37,7 +37,7 @@ func NewInterpreter(appName, executeCommand, executer string, dryRun bool, cmdHa
 		App:            appName,
 		cmdHandler:     cmdHandler,
 		commandFile:    commandFile,
-		dryRun:         dryRun,
+		DryRun:         dryRun,
 		ExecuteCommand: executeCommand,
 		executer:       executer,
 		ExtraVariables: make(map[string]string),
@@ -116,7 +116,7 @@ func (r *Interpreter) Run() error {
 	}
 
 	command, err := r.cmdHandler.GetExecutedCommandMakeScript(r.ExecuteCommand, c1)
-	if r.dryRun {
+	if r.DryRun {
 		if err != nil {
 			return err
 		}

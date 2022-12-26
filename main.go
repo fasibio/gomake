@@ -194,10 +194,12 @@ func (r *Runner) ExtraVariables(ctx *cli.Context, s []string) error {
 
 func (r *Runner) RunBefore(c *cli.Context) error {
 	neededCommand := c.Args().Get(0)
+	dryRun := c.Bool(DryRunCli)
 	if neededCommand == "" {
 		return fmt.Errorf("need name of executing command")
 	}
 	r.interpreter.ExecuteCommand = neededCommand
+	r.interpreter.DryRun = dryRun
 	return nil
 }
 
