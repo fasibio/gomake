@@ -28,7 +28,7 @@ jobs:
           distribution: goreleaser
           version: latest
           args: release --rm-dist
-          workdir: gomake
+          workdir: .
         env:
           GITHUB_TOKEN: ${{ secrets.GO_RELEASER_GITHUB_TOKEN }}
       - name: Upload assets
