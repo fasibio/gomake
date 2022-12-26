@@ -13,13 +13,14 @@ import (
 )
 
 const (
-	MakeFileCli          = "makefile"
-	CommandCli           = "command"
-	ExecuterCli          = "executer"
-	App                  = "GOMAKE"
-	DryRunCli            = "dry-run"
-	VarsCli              = "var"
-	ShellAutocompleteCli = "shell"
+	MakeFileCli            = "makefile"
+	CommandCli             = "command"
+	ExecuterCli            = "executer"
+	App                    = "GOMAKE"
+	DryRunCli              = "dry-run"
+	VarsCli                = "var"
+	ShellAutocompleteCli   = "shell"
+	PersistAutocompleteCli = "persist"
 )
 
 func getFlagEnvByFlagName(flagName string) string {
@@ -43,7 +44,6 @@ func main() {
 
 	app1 := &cli.App{
 
-		ArgsUsage:            "{executed command name}",
 		EnableBashCompletion: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -73,6 +73,12 @@ func main() {
 						EnvVars: []string{"SHELL"},
 						Usage:   "Shell inside this terminal",
 					},
+					&cli.BoolFlag{
+						Name:    PersistAutocompleteCli,
+						Aliases: []string{"p"},
+						EnvVars: []string{getFlagEnvByFlagName(PersistAutocompleteCli)},
+						Usage:   "To make autocomplete for this programm persist (Linux only)",
+					},
 				},
 			},
 			{
@@ -81,6 +87,7 @@ func main() {
 				Action: runner.List,
 			},
 			{
+				ArgsUsage:    "{executed command name}",
 				Name:         "run",
 				Usage:        "Run commands from gomake yml file",
 				BashComplete: runner.RunBashComplete,
@@ -250,8 +257,10 @@ func (r *Runner) RunBashComplete(c *cli.Context) {
 }
 
 func (r *Runner) Autocomplete(c *cli.Context) error {
+	persist := c.Bool(PersistAutocompleteCli)
 	shell := c.String(ShellAutocompleteCli)
-	log.Println(c.App.Name, shell)
+	log.Println(c.App.Name, shell, persist)
+
 	if strings.HasSuffix(shell, "zsh") {
 		err := os.Setenv("PROG", c.App.Name)
 		if err != nil {
@@ -262,12 +271,38 @@ func (r *Runner) Autocomplete(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		err = os.WriteFile("/usr/tmp/zsh_autocomplete", f, 0644)
+		if persist {
+			path := fmt.Sprintf("/etc/bash_completion.d/%s", c.App.Name)
+			err = os.WriteFile(path, f, 0644)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Autocomplete was added to %s \n reload shell to activate or \n export PROG=%s \n source %s", path, c.App.Name, path)
+		} else {
+			err = os.WriteFile("/usr/tmp/zsh_autocomplete", f, 0644)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("Execute Command \n export PROG=%s \n source /usr/tmp/zsh_autocomplete", c.App.Name)
+		}
+	}
+	if strings.HasSuffix(shell, "bash") {
+		err := os.Setenv("PROG", c.App.Name)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Execute Command \n export PROG=%s \n source /usr/tmp/zsh_autocomplete", c.App.Name)
+
+		f, err := autocompleteFiles.ReadFile("autocomplete/bash_autocomplete")
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile("/usr/tmp/bash_autocomplete", f, 0644)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Execute Command \n export PROG=%s \n source /usr/tmp/bash_autocomplete", c.App.Name)
 	}
+
 	return nil
 }
 
