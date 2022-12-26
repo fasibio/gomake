@@ -1,0 +1,34 @@
+
+{{$bval := "B"}}
+variables: 
+  A: {{$bval}}
+  FC: {{ .Var.f}}_included
+  PUB_KEY: {{shell "cat ~/.ssh/id_rsa.pub"}}
+  AB: {{$bval}}B
+---
+install:
+  script: 
+    - touch test.gomake.txt
+    - echo "Hallo" > test.gomake.txt
+    - export TEST1234=ShowME
+    - echo $TEST1234
+    {{- if eq .Var.A "B" }}
+    - echo "LINUX"
+    {{- end}}
+    - ls {{ .Env.ZDOTDIR}}
+    {{include "execute"}}
+    - echo {{.Bar}}
+    - echo {{.Var.PUB_KEY}}
+    - lf
+  on_failure: 
+    - echo "Fehler"
+    {{include "execute"}}
+execute: 
+  script:
+    - echo "execute"
+    {{include "extern"}}
+  on_failure: 
+    - echo "execute Fehler"
+extern: 
+  script:
+    - echo "extern"
