@@ -21,14 +21,14 @@ install:
     - echo {{.Var.PUB_KEY}}
     - lf
   on_failure: 
-    - echo "Fehler"
+    - echo "Error"
     {{include "execute"}}
 execute: 
   script:
     - echo "execute"
     {{include "extern"}}
   on_failure: 
-    - echo "execute Fehler"
+    - echo "execute Error"
 extern: 
   script:
     - echo "extern"

@@ -43,7 +43,7 @@ func main() {
 	}
 
 	app1 := &cli.App{
-
+		Usage:                "A helm like makefile",
 		EnableBashCompletion: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
