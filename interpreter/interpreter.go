@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/fasibio/gomake/command"
 	nearfinder "github.com/fasibio/gomake/nearFinder"
 	"gopkg.in/yaml.v2"
@@ -173,6 +174,11 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 		}
 		return string(b)
 	}
+	sprigFunc := sprig.FuncMap()
+	for k, v := range sprigFunc {
+		funcMap[k] = v
+	}
+
 	t, err := t.Funcs(funcMap).Parse(tmpl)
 	if err != nil {
 		return []byte{}, err

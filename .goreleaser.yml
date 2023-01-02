@@ -6,3 +6,8 @@ builds:
     goarch:
       - amd64
       - arm64
+dockers:
+  - image_templates:
+    - fasibio/gomake
+furies:
+- account: myaccount

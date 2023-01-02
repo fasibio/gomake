@@ -80,9 +80,9 @@ other commands script or onFailure depands of position of command
 **shell** 
 command execution before the main script is running useful to fill Variables
 
+And all sprig functions ==> [Documentation](http://masterminds.github.io/sprig/)
+
 # Missing
-- include other gomake files. 
-- slice function to use arrays, maps also as variables
 - Windows tests
 - Dockerfile to execute as part of CI-Pipeline
 
