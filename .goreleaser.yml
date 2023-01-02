@@ -1,4 +1,7 @@
 builds:
+  - env:
+    - CGO_ENABLED=0
+  binary: gomake
   - goos:
       - darwin
       - linux
