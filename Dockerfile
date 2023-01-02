@@ -1,4 +1,4 @@
-FROM scratch 
+FROM alpine 
 RUN mkdir test
 COPY . /test
 RUN ls -la test
