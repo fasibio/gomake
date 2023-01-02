@@ -1,5 +1,5 @@
 FROM scratch
 ENTRYPOINT ["/gomake"]
-COPY gomake /
+COPY gomake1 /
 
 
