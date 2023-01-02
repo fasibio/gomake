@@ -8,6 +8,6 @@ RUN go get
 RUN go build
 
 FROM alpine 
-COPY --from=builder /gomake/gomake /usr/bin/gomake
+COPY ./gomake /usr/bin/gomake
 ENTRYPOINT [ "gomake" ]
 
