@@ -10,4 +10,4 @@ dockers:
   - image_templates:
     - fasibio/gomake
 furies:
-- account: myaccount
+  - account: myaccount
