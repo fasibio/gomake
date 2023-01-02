@@ -1,5 +1,3 @@
-FROM scratch
-ENTRYPOINT ["/gomake"]
-COPY gomake1 /
-
-
+FROM alpine
+ENTRYPOINT ["/usr/bin/gomake"]
+COPY gomake /usr/bin/gomake
