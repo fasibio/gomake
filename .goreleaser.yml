@@ -1,14 +1,14 @@
 builds:
-  - env:
-    - CGO_ENABLED=0
+- env:
+  - CGO_ENABLED=0
   binary: gomake
-  - goos:
-      - darwin
-      - linux
-      - windows
-    goarch:
-      - amd64
-      - arm64
+  goos:
+    - darwin
+    - linux
+    - windows
+  goarch:
+    - amd64
+    - arm64
 
 dockers:
 - image_templates:
