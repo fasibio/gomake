@@ -9,11 +9,4 @@ builds:
 dockers:
   - image_templates:
     - fasibio/gomake
-release:
-  furies:
-    - account: fasibio
-
-# providers:
-#   furies:
-#     owner: fasibio
-#     repository: gomake
+    - fasibio/gomake:{{.Version}}
