@@ -1,4 +1,4 @@
-package main
+package interpreter
 
 import (
 	"bytes"
@@ -10,6 +10,7 @@ import (
 	"text/template"
 
 	"github.com/fasibio/gomake/command"
+	nearfinder "github.com/fasibio/gomake/nearFinder"
 	"gopkg.in/yaml.v2"
 )
 
@@ -45,7 +46,7 @@ func NewInterpreter(appName, executeCommand, executer string, dryRun bool, cmdHa
 }
 
 func (r *Interpreter) GetMakeScripts() (command.MakeStruct, error) {
-	explizitMakeFile, _, err := r.getExecuteTemplate()
+	explizitMakeFile, _, err := r.GetExecuteTemplate(string(r.commandFile))
 	if err != nil {
 		return nil, err
 	}
@@ -57,8 +58,11 @@ func (r *Interpreter) getMakeScripts(yamlFileData []byte) (command.MakeStruct, e
 	return c1, err
 }
 
-func (r *Interpreter) getExecuteTemplate() ([]byte, map[string]map[string]string, error) {
-	varCommandArr := strings.Split(string(r.commandFile), "---")
+func (r *Interpreter) GetExecuteTemplate(file string) ([]byte, map[string]map[string]string, error) {
+	varCommandArr := strings.Split(file, "---")
+	if len(varCommandArr) == 1 {
+		varCommandArr = strings.Split("variables:\n---\n"+file, "---")
+	}
 	if len(varCommandArr) != 2 {
 		return []byte{}, nil, fmt.Errorf("only variables and command as seperated yaml are allowed")
 	}
@@ -73,7 +77,7 @@ func (r *Interpreter) getExecuteTemplate() ([]byte, map[string]map[string]string
 		tempVar[k] = v
 	}
 
-	varStr, err := r.getParsedTemplate(varCommandArr[0], TemplateData{Env: env, Var: tempVar})
+	varStr, err := r.getParsedTemplate("gomake_variables", varCommandArr[0], TemplateData{Env: env, Var: tempVar})
 
 	if err != nil {
 		return nil, nil, err
@@ -92,7 +96,7 @@ func (r *Interpreter) getExecuteTemplate() ([]byte, map[string]map[string]string
 		return nil, nil, err
 	}
 
-	b, err := r.getParsedTemplate(varCommandArr[1], TemplateData{Var: v, Env: env})
+	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Var: v, Env: env})
 	return b, variables, err
 }
 
@@ -102,7 +106,7 @@ type DryRunOutput struct {
 }
 
 func (r *Interpreter) Run() error {
-	explizitMakeFile, variables, err := r.getExecuteTemplate()
+	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile))
 	if err != nil {
 		return err
 	}
@@ -112,7 +116,7 @@ func (r *Interpreter) Run() error {
 	}
 
 	if _, ok := c1[r.ExecuteCommand]; !ok {
-		return fmt.Errorf("command %s not exist at makefile", r.ExecuteCommand)
+		return fmt.Errorf("command %s not exist at makefile, did you mean \n%s", r.ExecuteCommand, nearfinder.ClosestMatch(r.ExecuteCommand, nearfinder.GetKeysOfMap(c1), 2))
 	}
 
 	command, err := r.cmdHandler.GetExecutedCommandMakeScript(r.ExecuteCommand, c1)
@@ -150,11 +154,26 @@ func (r *Interpreter) execCmd(command string) error {
 	return cmd.Run()
 }
 
-func (r *Interpreter) getParsedTemplate(tmpl string, data TemplateData) ([]byte, error) {
-	t := template.New("gomake")
+func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data TemplateData) ([]byte, error) {
+	t := template.New(templateName)
 	var buf bytes.Buffer
 
-	t, err := t.Funcs(r.cmdHandler.GetFuncMap()).Parse(tmpl)
+	funcMap := r.cmdHandler.GetFuncMap()
+	funcMap["includeFile"] = func(name string) string {
+		f, err := os.ReadFile(name)
+		if err != nil {
+			log.Panic(err)
+		}
+		b, variables, err := r.GetExecuteTemplate(string(f))
+		if err != nil {
+			log.Panic(err)
+		}
+		for k, v := range variables["variables"] {
+			data.Var[k] = v
+		}
+		return string(b)
+	}
+	t, err := t.Funcs(funcMap).Parse(tmpl)
 	if err != nil {
 		return []byte{}, err
 	}

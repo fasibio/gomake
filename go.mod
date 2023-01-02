@@ -3,6 +3,7 @@ module github.com/fasibio/gomake
 go 1.19
 
 require (
+	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/urfave/cli/v2 v2.23.7
 	gopkg.in/yaml.v2 v2.4.0
 )

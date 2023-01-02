@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/fasibio/gomake/command"
+	"github.com/fasibio/gomake/interpreter"
+	nearfinder "github.com/fasibio/gomake/nearFinder"
 	"github.com/urfave/cli/v2"
 )
 
@@ -45,6 +47,7 @@ func main() {
 	app1 := &cli.App{
 		Usage:                "A helm like makefile",
 		EnableBashCompletion: true,
+		CommandNotFound:      runner.CommandNotFound,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    MakeFileCli,
@@ -111,66 +114,6 @@ func main() {
 		},
 	}
 
-	// app := cli.NewApp()
-
-	// app.ArgsUsage = "{executed command name}"
-	// app.EnableBashCompletion = true
-	// app.BashComplete = runner.BashComplete
-	// app.Flags = []cli.Flag{
-	// 	&cli.StringFlag{
-	// 		Name:    MakeFileCli,
-	// 		Aliases: []string{"f"},
-	// 		EnvVars: []string{getFlagEnvByFlagName(MakeFileCli)},
-	// 		Value:   "./gomake.yml",
-	// 		Usage:   "gomake file to use",
-	// 	},
-	// 	&cli.StringFlag{
-	// 		Name:    ExecuterCli,
-	// 		Aliases: []string{"sh"},
-	// 		EnvVars: []string{getFlagEnvByFlagName(ExecuterCli)},
-	// 		Value:   "/bin/sh",
-	// 		Usage:   "Shell to execute gomakefile config",
-	// 	},
-	// }
-	// app.Before = runner.Before
-	// app.Commands = []*cli.Command{
-	// 	{
-	// 		Name:   "autocomplete",
-	// 		Usage:  "Set Autocomplete helper stuff to current shell session",
-	// 		Action: runner.Autocomplete,
-	// 		Flags: []cli.Flag{
-	// 			&cli.StringFlag{
-	// 				Name:    ShellAutocompleteCli,
-	// 				EnvVars: []string{"SHELL"},
-	// 				Usage:   "Shell inside this terminal",
-	// 			},
-	// 		},
-	// 	},
-	// 	{
-	// 		Name:   "ls",
-	// 		Usage:  "List all commands described at gomake yaml file",
-	// 		Action: runner.List,
-	// 	},
-	// 	{
-	// 		Name:  "run",
-	// 		Usage: "Run commands from gomake yml file",
-	// 		Flags: []cli.Flag{
-	// 			&cli.BoolFlag{
-	// 				Name:    DryRunCli,
-	// 				EnvVars: []string{getFlagEnvByFlagName(DryRunCli)},
-	// 				Value:   false,
-	// 				Usage:   "Only show template paresed gomake.yml but not execute it",
-	// 			},
-	// 			&cli.StringSliceFlag{
-	// 				Name:    VarsCli,
-	// 				EnvVars: []string{getFlagEnvByFlagName(VarsCli)},
-	// 				Action:  runner.ExtraVariables,
-	// 			},
-	// 		},
-	// 		Action: runner.Run,
-	// 		Before: runner.RunBefore,
-	// 	},
-	// }
 	if err := app1.Run(os.Args); err != nil {
 		fmt.Println("Error: ", err)
 	}
@@ -178,7 +121,7 @@ func main() {
 
 type Runner struct {
 	cmdHandler  command.CommandHandler
-	interpreter Interpreter
+	interpreter interpreter.Interpreter
 }
 
 func (r *Runner) ExtraVariables(ctx *cli.Context, s []string) error {
@@ -203,6 +146,14 @@ func (r *Runner) RunBefore(c *cli.Context) error {
 	return nil
 }
 
+func (r *Runner) CommandNotFound(c *cli.Context, cmd string) {
+	possibleCommands := []string{}
+	for _, v := range c.App.Commands {
+		possibleCommands = append(possibleCommands, v.Names()...)
+	}
+	fmt.Printf("Command \"%s\" not found did you mean \n%s\n", cmd, nearfinder.ClosestMatch(cmd, possibleCommands, 1))
+}
+
 func (r *Runner) Before(c *cli.Context) error {
 	makefile := c.String(MakeFileCli)
 	executer := c.String(ExecuterCli)
@@ -210,7 +161,7 @@ func (r *Runner) Before(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	r.interpreter = NewInterpreter(App, "", executer, c.Bool(DryRunCli), r.cmdHandler, f)
+	r.interpreter = interpreter.NewInterpreter(App, "", executer, c.Bool(DryRunCli), r.cmdHandler, f)
 	return nil
 }
 
@@ -240,7 +191,11 @@ func (r *Runner) RunBashComplete(c *cli.Context) {
 							continue
 						}
 					}
-					autoCompleteHelp = append(autoCompleteHelp, fmt.Sprintf("--%s", csfn))
+					minusStr := "-"
+					if len(csfn) > 1 {
+						minusStr = "--"
+					}
+					autoCompleteHelp = append(autoCompleteHelp, fmt.Sprintf("%s%s", minusStr, csfn))
 				}
 			}
 		}

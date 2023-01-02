@@ -1,0 +1,11 @@
+
+variables: 
+  helper: "YES"
+
+---
+readFileSize: 
+  script: 
+    {{- if eq .Var.A "B" }}
+    - echo "LINUX bla bal" 
+    {{- end}}
+    

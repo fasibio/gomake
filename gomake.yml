@@ -6,6 +6,7 @@ variables:
   PUB_KEY: {{shell "cat ~/.ssh/id_rsa.pub"}}
   AB: {{$bval}}B
 ---
+{{ includeFile "./gomake_helper.yml"}}
 install:
   script: 
     - touch test.gomake.txt
@@ -17,6 +18,7 @@ install:
     {{- end}}
     - ls {{ .Env.ZDOTDIR}}
     {{include "execute"}}
+    {{include "readFileSize"}}
     - echo {{.Bar}}
     - echo {{.Var.PUB_KEY}}
     - lf

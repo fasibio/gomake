@@ -71,6 +71,9 @@ gomake run --var f=foo --var bar=baz --dry-run install
 ```
 # Extra functions
 
+**includeFile**
+include all variables and commands from an other lokal file
+
 **include**
 other commands script or onFailure depands of position of command
 
