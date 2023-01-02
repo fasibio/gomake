@@ -9,5 +9,7 @@ builds:
 dockers:
   - image_templates:
     - fasibio/gomake
-furies:
-  - account: myaccount
+release:
+  furies:
+    - account: myaccount
+  github:
