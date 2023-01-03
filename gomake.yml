@@ -14,7 +14,7 @@ install:
     - export TEST1234=ShowME
     - echo $TEST1234
     {{- if eq .Var.A "B" }}
-    - echo {{lower "LINUX"}}
+    - echo {{lower "LINUX make"}}
     {{- end}}
     - ls {{ .Env.ZDOTDIR}}
     {{include "execute"}}

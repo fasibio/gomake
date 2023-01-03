@@ -47,7 +47,7 @@ func NewInterpreter(appName, executeCommand, executer string, dryRun bool, cmdHa
 }
 
 func (r *Interpreter) GetMakeScripts() (command.MakeStruct, error) {
-	explizitMakeFile, _, err := r.GetExecuteTemplate(string(r.commandFile))
+	explizitMakeFile, _, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]string))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *Interpreter) getMakeScripts(yamlFileData []byte) (command.MakeStruct, e
 	return c1, err
 }
 
-func (r *Interpreter) GetExecuteTemplate(file string) ([]byte, map[string]map[string]string, error) {
+func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]string) ([]byte, map[string]map[string]string, error) {
 	varCommandArr := strings.Split(file, "---")
 	if len(varCommandArr) == 1 {
 		varCommandArr = strings.Split("variables:\n---\n"+file, "---")
@@ -78,6 +78,12 @@ func (r *Interpreter) GetExecuteTemplate(file string) ([]byte, map[string]map[st
 		tempVar[k] = v
 	}
 
+	for k, v := range extraVariables {
+		if _, ok := tempVar[k]; !ok {
+			tempVar[k] = v
+		}
+	}
+
 	varStr, err := r.getParsedTemplate("gomake_variables", varCommandArr[0], TemplateData{Env: env, Var: tempVar})
 
 	if err != nil {
@@ -92,10 +98,18 @@ func (r *Interpreter) GetExecuteTemplate(file string) ([]byte, map[string]map[st
 		variables["variables"][k] = v
 	}
 
+	for k, v := range extraVariables {
+		if _, ok := variables["variables"][k]; !ok {
+			variables["variables"][k] = v
+		}
+	}
+
 	v, err := r.cmdHandler.ExecuteVariablesCommands(variables["variables"])
 	if err != nil {
 		return nil, nil, err
 	}
+
+	log.Println(v, string(varCommandArr[1]))
 
 	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Var: v, Env: env})
 	return b, variables, err
@@ -107,7 +121,7 @@ type DryRunOutput struct {
 }
 
 func (r *Interpreter) Run() error {
-	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile))
+	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]string))
 	if err != nil {
 		return err
 	}
@@ -165,7 +179,7 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 		if err != nil {
 			log.Panic(err)
 		}
-		b, variables, err := r.GetExecuteTemplate(string(f))
+		b, variables, err := r.GetExecuteTemplate(string(f), data.Var)
 		if err != nil {
 			log.Panic(err)
 		}
