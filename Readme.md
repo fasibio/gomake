@@ -69,6 +69,13 @@ to check how script lookslike after template execution:
 ```bash
 gomake run --var f=foo --var bar=baz --dry-run install
 ```
+
+# How to Install
+
+## Linux 
+### ZSH
+
+
 # Extra functions
 
 **includeFile**
@@ -82,8 +89,13 @@ command execution before the main script is running useful to fill Variables
 
 And all sprig functions ==> [Documentation](http://masterminds.github.io/sprig/)
 
+
+# Use inside Pipeline
+There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
+
+
 # Missing
 - Windows tests
-- Dockerfile to execute as part of CI-Pipeline
+
 
 
