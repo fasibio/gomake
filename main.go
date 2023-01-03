@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -49,11 +48,11 @@ func main() {
 		EnableBashCompletion: true,
 		CommandNotFound:      runner.CommandNotFound,
 		Flags: []cli.Flag{
-			&cli.StringFlag{
+			&cli.PathFlag{
 				Name:    MakeFileCli,
 				Aliases: []string{"f"},
 				EnvVars: []string{getFlagEnvByFlagName(MakeFileCli)},
-				Value:   "./gomake.yml",
+				Value:   "gomake.yml",
 				Usage:   "gomake file to use",
 			},
 			&cli.StringFlag{
@@ -155,7 +154,7 @@ func (r *Runner) CommandNotFound(c *cli.Context, cmd string) {
 }
 
 func (r *Runner) Before(c *cli.Context) error {
-	makefile := c.String(MakeFileCli)
+	makefile := c.Path(MakeFileCli)
 	executer := c.String(ExecuterCli)
 	f, err := os.ReadFile(makefile)
 	if err != nil {
@@ -216,7 +215,6 @@ func (r *Runner) RunBashComplete(c *cli.Context) {
 func (r *Runner) Autocomplete(c *cli.Context) error {
 	persist := c.Bool(PersistAutocompleteCli)
 	shell := c.String(ShellAutocompleteCli)
-	log.Println(c.App.Name, shell, persist)
 
 	if strings.HasSuffix(shell, "zsh") {
 		err := os.Setenv("PROG", c.App.Name)

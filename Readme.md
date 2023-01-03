@@ -72,9 +72,15 @@ gomake run --var f=foo --var bar=baz --dry-run install
 
 # How to Install
 
+## With go
+
+```
+go install github.com/fasibio/gomake@latest
+```
+
 ## Linux (Change version to current)
 ```bash
-sudo wget -O /usr/bin/gomake https://github.com/fasibio/gomake/releases/download/1.0.26/gomake_1.0.26_linux_amd64 ; sudo chmod 755 /usr/bin/gomake
+sudo wget -O /usr/bin/gomake https://github.com/fasibio/gomake/releases/download/1.0.27/gomake_1.0.27_linux_amd64 ; sudo chmod 755 /usr/bin/gomake
 ```
 
 

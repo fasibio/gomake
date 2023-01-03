@@ -1,0 +1,11 @@
+FROM golang:1.19-alpine as builder
+RUN mkdir /gomake
+WORKDIR /gomake
+COPY . .
+RUN go get
+RUN go build
+
+FROM alpine 
+ENTRYPOINT ["/usr/bin/gomake"]
+COPY --from=builder /gomake/gomake /usr/bin/gomake
+RUN chmod 755 /usr/bin/gomake

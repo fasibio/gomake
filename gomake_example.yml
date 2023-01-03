@@ -1,0 +1,37 @@
+
+{{$bval := "B"}}
+variables: 
+  A: {{$bval}}
+  FC: {{ .Var.f}}_included
+  PUB_KEY: {{shell "cat ~/.ssh/id_rsa.pub"}}
+  AB: {{$bval}}B
+---
+{{ includeFile "./gomake_helper.yml"}}
+install:
+  script: 
+    - go version
+    - touch test.gomake.txt
+    - echo "Hallo" > test.gomake.txt
+    - export TEST1234=ShowME
+    - echo $TEST1234
+    {{- if eq .Var.A "B" }}
+    - echo {{lower "LINUX make"}}
+    {{- end}}
+    - ls {{ .Env.ZDOTDIR}}
+    {{include "execute"}}
+    {{include "readFileSize"}}
+    - echo {{.Bar}}
+    - echo {{.Var.PUB_KEY}}
+    - lf
+  on_failure: 
+    - echo "Error"
+    {{include "execute"}}
+execute: 
+  script:
+    - echo "execute"
+    {{include "extern"}}
+  on_failure: 
+    - echo "execute Error"
+extern: 
+  script:
+    - echo "extern"

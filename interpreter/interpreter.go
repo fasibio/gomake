@@ -109,8 +109,6 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		return nil, nil, err
 	}
 
-	log.Println(v, string(varCommandArr[1]))
-
 	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Var: v, Env: env})
 	return b, variables, err
 }
