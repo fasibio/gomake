@@ -10,12 +10,13 @@ USAGE:
 
 COMMANDS:
    autocomplete  Set Autocomplete helper stuff to current shell session
+   init          Crate a starter gomake.yml to current dir
    ls            List all commands described at gomake yaml file
-   run           Run commands from gomake yml file
+   run           Run commands from gomake.yml file
    help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   --makefile value, -f value    gomake file to use (default: "./gomake.yml") [$GOMAKE_MAKEFILE]
+   --makefile value, -f value    gomake file to use (default: "gomake.yml") [$GOMAKE_MAKEFILE]
    --executer value, --sh value  Shell to execute gomakefile config (default: "/bin/sh") [$GOMAKE_EXECUTER]
    --help, -h                    show help (default: false)
 ```

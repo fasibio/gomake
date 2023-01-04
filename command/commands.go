@@ -46,12 +46,16 @@ func (c *CommandHandler) registerStandardHandler() {
 	})
 }
 
-func (c *CommandHandler) ExecuteVariablesCommands(variabels map[string]string) (map[string]string, error) {
+func (c *CommandHandler) ExecuteVariablesCommands(variabels map[string]any) (map[string]any, error) {
 	res := variabels
 	for k, v := range variabels {
 		prefix := fmt.Sprintf("__%s_", c.appName)
-		if strings.HasPrefix(v, prefix) {
-			command := strings.SplitN(strings.TrimLeft(v, prefix), "=", 2)
+		vstr, ok := v.(string)
+		if !ok {
+			continue
+		}
+		if strings.HasPrefix(vstr, prefix) {
+			command := strings.SplitN(strings.TrimLeft(vstr, prefix), "=", 2)
 			if len(command) > 2 {
 				log.Println("Problem wtf")
 			}

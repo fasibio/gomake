@@ -1,0 +1,22 @@
+variables: 
+  a: b
+  b: c
+---
+
+echoA:
+  script: 
+    - echo {{.Var.a}}
+
+echoB: 
+  script: 
+    - echo {{.Var.b}}
+    - exit 1
+  on_failure: 
+    - echo "Something exit with not 0"
+
+run:
+  script: 
+    {{include "echoA"}}
+    {{include "echoB"}}
+  on_failure: 
+    {{include "echoB"}}

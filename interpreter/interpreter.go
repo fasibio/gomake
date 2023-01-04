@@ -16,7 +16,7 @@ import (
 )
 
 type TemplateData struct {
-	Var map[string]string
+	Var map[string]any
 	Env map[string]string
 }
 
@@ -47,7 +47,7 @@ func NewInterpreter(appName, executeCommand, executer string, dryRun bool, cmdHa
 }
 
 func (r *Interpreter) GetMakeScripts() (command.MakeStruct, error) {
-	explizitMakeFile, _, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]string))
+	explizitMakeFile, _, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]any))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *Interpreter) getMakeScripts(yamlFileData []byte) (command.MakeStruct, e
 	return c1, err
 }
 
-func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]string) ([]byte, map[string]map[string]string, error) {
+func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]any) ([]byte, map[string]map[string]any, error) {
 	varCommandArr := strings.Split(file, "---")
 	if len(varCommandArr) == 1 {
 		varCommandArr = strings.Split("variables:\n---\n"+file, "---")
@@ -73,7 +73,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		pair := strings.Split(e, "=")
 		env[pair[0]] = pair[1]
 	}
-	tempVar := make(map[string]string)
+	tempVar := make(map[string]any)
 	for k, v := range r.ExtraVariables {
 		tempVar[k] = v
 	}
@@ -89,7 +89,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 	if err != nil {
 		return nil, nil, err
 	}
-	var variables map[string]map[string]string
+	var variables map[string]map[string]any
 	err = yaml.Unmarshal(varStr, &variables)
 	if err != nil {
 		return []byte{}, nil, err
@@ -114,12 +114,12 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 }
 
 type DryRunOutput struct {
-	Variables       map[string]string
+	Variables       map[string]any
 	ExecutedCommand command.Operation
 }
 
 func (r *Interpreter) Run() error {
-	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]string))
+	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]any))
 	if err != nil {
 		return err
 	}
@@ -162,6 +162,7 @@ func (r *Interpreter) Run() error {
 
 func (r *Interpreter) execCmd(command string) error {
 	cmd := exec.Command(r.executer, "-c", command)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = log.Writer()
 	cmd.Stderr = log.Writer()
 	return cmd.Run()

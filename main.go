@@ -24,6 +24,10 @@ const (
 	PersistAutocompleteCli = "persist"
 )
 
+const (
+	GomakeDefaultFile = "gomake.yml"
+)
+
 func getFlagEnvByFlagName(flagName string) string {
 	return fmt.Sprintf("%s_%s", App, strings.ToUpper(flagName))
 }
@@ -37,6 +41,9 @@ func init() {
 
 //go:embed autocomplete/*
 var autocompleteFiles embed.FS
+
+//go:embed gomake_ini.yml
+var gomakeIni []byte
 
 func main() {
 	runner := Runner{
@@ -52,7 +59,7 @@ func main() {
 				Name:    MakeFileCli,
 				Aliases: []string{"f"},
 				EnvVars: []string{getFlagEnvByFlagName(MakeFileCli)},
-				Value:   "gomake.yml",
+				Value:   GomakeDefaultFile,
 				Usage:   "gomake file to use",
 			},
 			&cli.StringFlag{
@@ -63,7 +70,6 @@ func main() {
 				Usage:   "Shell to execute gomakefile config",
 			},
 		},
-		Before: runner.Before,
 		Commands: []*cli.Command{
 			{
 				Name:   "autocomplete",
@@ -84,21 +90,27 @@ func main() {
 				},
 			},
 			{
+				Name:   "init",
+				Usage:  fmt.Sprintf("Crate a starter %s to current dir", GomakeDefaultFile),
+				Action: runner.Init,
+			},
+			{
 				Name:   "ls",
 				Usage:  "List all commands described at gomake yaml file",
 				Action: runner.List,
+				Before: runner.Before,
 			},
 			{
 				ArgsUsage:    "{executed command name}",
 				Name:         "run",
-				Usage:        "Run commands from gomake yml file",
+				Usage:        fmt.Sprintf("Run commands from %s file", GomakeDefaultFile),
 				BashComplete: runner.RunBashComplete,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    DryRunCli,
 						EnvVars: []string{getFlagEnvByFlagName(DryRunCli)},
 						Value:   false,
-						Usage:   "Only show template paresed gomake.yml but not execute it",
+						Usage:   fmt.Sprintf("Only show template paresed %s but not execute it", GomakeDefaultFile),
 					},
 					&cli.StringSliceFlag{
 						Name:    VarsCli,
@@ -135,6 +147,7 @@ func (r *Runner) ExtraVariables(ctx *cli.Context, s []string) error {
 }
 
 func (r *Runner) RunBefore(c *cli.Context) error {
+	r.Before(c)
 	neededCommand := c.Args().Get(0)
 	dryRun := c.Bool(DryRunCli)
 	if neededCommand == "" {
@@ -263,6 +276,25 @@ func (r *Runner) Autocomplete(c *cli.Context) error {
 
 func (r *Runner) Run(c *cli.Context) error {
 	return r.interpreter.Run()
+}
+
+func (r *Runner) Init(c *cli.Context) error {
+	_, err := os.Stat(GomakeDefaultFile)
+	if err != nil {
+		f, err := os.Create(GomakeDefaultFile)
+		defer f.Close()
+		if err != nil {
+			return err
+		}
+		_, err = f.Write(gomakeIni)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s was created\nyou can execute with \ngomake run run", GomakeDefaultFile)
+		return nil
+	}
+	return fmt.Errorf("%s already exist", GomakeDefaultFile)
+
 }
 
 func (r *Runner) List(c *cli.Context) error {
