@@ -16,8 +16,8 @@ import (
 )
 
 type TemplateData struct {
-	Var map[string]any
-	Env map[string]string
+	Vars map[string]any
+	Env  map[string]string
 }
 
 func (t TemplateData) Bar() string {
@@ -62,7 +62,7 @@ func (r *Interpreter) getMakeScripts(yamlFileData []byte) (command.MakeStruct, e
 func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]any) ([]byte, map[string]map[string]any, error) {
 	varCommandArr := strings.Split(file, "---")
 	if len(varCommandArr) == 1 {
-		varCommandArr = strings.Split("variables:\n---\n"+file, "---")
+		varCommandArr = strings.Split("vars:\n---\n"+file, "---")
 	}
 	if len(varCommandArr) != 2 {
 		return []byte{}, nil, fmt.Errorf("only variables and command as seperated yaml are allowed")
@@ -84,7 +84,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		}
 	}
 
-	varStr, err := r.getParsedTemplate("gomake_variables", varCommandArr[0], TemplateData{Env: env, Var: tempVar})
+	varStr, err := r.getParsedTemplate("gomake_vars", varCommandArr[0], TemplateData{Env: env, Vars: tempVar})
 
 	if err != nil {
 		return nil, nil, err
@@ -95,26 +95,26 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		return []byte{}, nil, err
 	}
 	for k, v := range r.ExtraVariables {
-		variables["variables"][k] = v
+		variables["vars"][k] = v
 	}
 
 	for k, v := range extraVariables {
-		if _, ok := variables["variables"][k]; !ok {
-			variables["variables"][k] = v
+		if _, ok := variables["vars"][k]; !ok {
+			variables["vars"][k] = v
 		}
 	}
 
-	v, err := r.cmdHandler.ExecuteVariablesCommands(variables["variables"])
+	v, err := r.cmdHandler.ExecuteVariablesCommands(variables["vars"])
 	if err != nil {
 		return nil, nil, err
 	}
 
-	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Var: v, Env: env})
+	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Vars: v, Env: env})
 	return b, variables, err
 }
 
 type DryRunOutput struct {
-	Variables       map[string]any
+	Vars            map[string]any
 	ExecutedCommand command.Operation
 }
 
@@ -138,7 +138,7 @@ func (r *Interpreter) Run() error {
 			return err
 		}
 		out, err := yaml.Marshal(DryRunOutput{
-			Variables:       variables["variables"],
+			Vars:            variables["vars"],
 			ExecutedCommand: command[r.ExecuteCommand],
 		})
 		if err != nil {
@@ -178,12 +178,12 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 		if err != nil {
 			log.Panic(err)
 		}
-		b, variables, err := r.GetExecuteTemplate(string(f), data.Var)
+		b, variables, err := r.GetExecuteTemplate(string(f), data.Vars)
 		if err != nil {
 			log.Panic(err)
 		}
-		for k, v := range variables["variables"] {
-			data.Var[k] = v
+		for k, v := range variables["vars"] {
+			data.Vars[k] = v
 		}
 		return string(b)
 	}

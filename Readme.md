@@ -25,9 +25,9 @@ GLOBAL OPTIONS:
 Example Script: 
 ```yaml
 {{$bval := "B"}}
-variables: 
+vars: 
   A: {{$bval}}
-  FC: {{ .Var.f}}_included
+  FC: {{ .Vars.f}}_included
   PUB_KEY: {{shell "cat ~/.ssh/id_rsa.pub"}}
   AB: {{$bval}}B
 ---
@@ -37,13 +37,13 @@ install:
     - echo "Hallo" > test.gomake.txt
     - export TEST1234=ShowME
     - echo $TEST1234
-    {{- if eq .Var.A "B" }}
+    {{- if eq .Vars.A "B" }}
     - echo "LINUX"
     {{- end}}
     - ls {{ .Env.ZDOTDIR}}
     {{include "execute"}}
     - echo {{.Bar}}
-    - echo {{.Var.PUB_KEY}}
+    - echo {{.Vars.PUB_KEY}}
     - lf
   on_failure: 
     - echo "Error"

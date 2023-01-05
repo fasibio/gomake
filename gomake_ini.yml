@@ -1,15 +1,15 @@
-variables: 
+vars: 
   a: b
   b: c
 ---
 
 echoA:
   script: 
-    - echo {{.Var.a}}
+    - echo {{.Vars.a}}
 
 echoB: 
   script: 
-    - echo {{.Var.b}}
+    - echo {{.Vars.b}}
     - exit 1
   on_failure: 
     - echo "Something exit with not 0"

@@ -1,5 +1,8 @@
-variables: 
-  goarchs: "amd64|arm64|386|arm"
+vars: 
+  goarchs: 
+   {{range $i, $value := list "amd64" "arm64" "386" "arm" }}
+    - {{$value}}
+   {{- end}}
   gooss: "darwin|linux|windows"
   dist: "dist"
   binary: "gomake"
@@ -20,20 +23,21 @@ buildAll:
 
 build: 
   script: 
-    - mkdir {{.Var.dist}}
-    {{- range $goosKey, $goos := splitList "|" $root.Var.gooss}}
-      {{- range $goarchKey, $goarch := splitList "|" $root.Var.goarchs}}
-    - env GOOS={{$goos}} GOARCH={{$goarch}} go build -o {{$root.Var.dist}}/{{$root.Var.binary}}_{{$goos}}_{{$goarch}}
+    - mkdir {{.Vars.dist}}
+    {{- range $goosKey, $goos := splitList "|" $root.Vars.gooss}}
+      {{- range $goarchKey, $goarch := $root.Vars.goarchs}}
+    - env GOOS={{$goos}} GOARCH={{$goarch}} go build -o {{$root.Vars.dist}}/{{$root.Vars.binary}}_{{$goos}}_{{$goarch}}
       {{- end}}
     {{- end}}
   on_failure: 
-    - rm -rf {{.Var.dist}}
+    - rm -rf {{.Vars.dist}}
+    
 buildDocker: 
   script: 
-    - docker build -t {{$root.Var.dockername}}:{{$root.Var.version}} -f {{$root.Var.dockerfile}} .
+    - docker build -t {{$root.Vars.dockername}}:{{$root.Vars.version}} -f {{$root.Vars.dockerfile}} .
   on_failure: 
-    - docker rmi {{$root.Var.dockername}}:{{$root.Var.version}}
+    - docker rmi {{$root.Vars.dockername}}:{{$root.Vars.version}}
 
 test: 
   script: 
-    - docker run --rm {{$root.Var.dockername}}:{{$root.Var.version}} --help
+    - docker run --rm {{$root.Vars.dockername}}:{{$root.Vars.version}} --help
