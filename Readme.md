@@ -103,6 +103,28 @@ And all sprig functions ==> [Documentation](http://masterminds.github.io/sprig/)
 There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
 
 
+# Use Docker-Images
+
+docker cli required
+
+To execute inside a dockerimage you can use like this: 
+```
+buildContainer: 
+  image: 
+    name: golang:latest # required
+    volumes: #optional
+      - {{.Env.PWD}}:/build
+    entrypoint: "" #optional emtpy string is default
+    executer: /bin/sh #optional /bin/sh is default
+  script: 
+    - cd /build
+    - ls
+    {{include "build"}}
+  on_failure: 
+
+```
+
+
 # Missing
 - Windows tests
 

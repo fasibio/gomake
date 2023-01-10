@@ -20,10 +20,6 @@ type TemplateData struct {
 	Env  map[string]string
 }
 
-func (t TemplateData) Bar() string {
-	return "Bar"
-}
-
 type Interpreter struct {
 	App            string
 	cmdHandler     command.CommandHandler
@@ -113,11 +109,6 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 	return b, variables, err
 }
 
-type DryRunOutput struct {
-	Vars            map[string]any
-	ExecutedCommand command.Operation
-}
-
 func (r *Interpreter) Run() error {
 	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]any))
 	if err != nil {
@@ -133,26 +124,25 @@ func (r *Interpreter) Run() error {
 	}
 
 	command, err := r.cmdHandler.GetExecutedCommandMakeScript(r.ExecuteCommand, c1)
+	if err != nil {
+		return err
+	}
 	if r.DryRun {
-		if err != nil {
-			return err
-		}
-		out, err := yaml.Marshal(DryRunOutput{
-			Vars:            variables["vars"],
-			ExecutedCommand: command[r.ExecuteCommand],
-		})
-		if err != nil {
-			return err
-		}
-		fmt.Println(string(out))
-		return nil
+		return r.printDryRun(command, variables)
 	}
 
-	err = r.execCmd(r.cmdHandler.SliceCommands(command[r.ExecuteCommand].Script))
+	cmd := r.cmdHandler.SliceCommands(command[r.ExecuteCommand].Script)
+	executer := r.executer
+	if image := command[r.ExecuteCommand].Image; image != nil {
+		cmd = getDockerCmd(cmd, image)
+		log.Println(cmd)
+	}
+
+	err = r.execCmd(executer, cmd)
 	if err != nil {
 		if len(command[r.ExecuteCommand].On_Failure) > 0 {
 			fmt.Println("Script end with error so start onFailure Scripts ...")
-			err = r.execCmd(r.cmdHandler.SliceCommands(command[r.ExecuteCommand].On_Failure))
+			err = r.execCmd(executer, r.cmdHandler.SliceCommands(command[r.ExecuteCommand].On_Failure))
 		} else {
 			fmt.Println("No onFailure Scripts found but got error")
 		}
@@ -160,8 +150,8 @@ func (r *Interpreter) Run() error {
 	return err
 }
 
-func (r *Interpreter) execCmd(command string) error {
-	cmd := exec.Command(r.executer, "-c", command)
+func (r *Interpreter) execCmd(executer, command string) error {
+	cmd := exec.Command(executer, "-c", command)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = log.Writer()
 	cmd.Stderr = log.Writer()

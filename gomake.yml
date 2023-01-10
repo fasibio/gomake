@@ -41,3 +41,14 @@ buildDocker:
 test: 
   script: 
     - docker run --rm {{$root.Vars.dockername}}:{{$root.Vars.version}} --help
+# Wrap build into a docker image
+buildContainer: 
+  image: 
+    name: golang:latest
+    volumes: 
+      - {{.Env.PWD}}:/build
+  script: 
+    - cd /build
+    - ls
+    {{include "build"}}
+  on_failure: 

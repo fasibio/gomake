@@ -11,7 +11,17 @@ type MakeStruct map[string]Operation
 
 type Operation struct {
 	Script     []string
+	Image      *DockerOperation
 	On_Failure []string
+}
+
+type DockerOperation struct {
+	Name string
+	//default is /bin/sh
+	Executer string
+	Volumes  []string
+	// default is nil
+	Entrypoint string
 }
 
 type CommandListType string
@@ -111,6 +121,7 @@ func (c *CommandHandler) GetExecutedCommandMakeScript(cmd string, data MakeStruc
 	res[cmd] = Operation{
 		Script:     commands,
 		On_Failure: onFailer,
+		Image:      data[cmd].Image,
 	}
 	return res, nil
 }
