@@ -22,6 +22,8 @@ buildAll:
     {{include "buildDocker"}}
 
 build: 
+  stage: b
+  color: "{{$root.Colors.purple}}"
   script: 
     - mkdir {{.Vars.dist}}
     {{- range $goosKey, $goos := splitList "|" $root.Vars.gooss}}
@@ -33,6 +35,8 @@ build:
     - rm -rf {{.Vars.dist}}
     
 buildDocker: 
+  stage: b
+  color: "{{$root.Colors.red}}"
   script: 
     - docker build -t {{$root.Vars.dockername}}:{{$root.Vars.version}} -f {{$root.Vars.dockerfile}} .
   on_failure: 
@@ -43,12 +47,12 @@ test:
     - docker run --rm {{$root.Vars.dockername}}:{{$root.Vars.version}} --help
 # Wrap build into a docker image
 buildContainer: 
+  color: {{$root.Colors.yellow}}
   image: 
-    name: golang:latest
+    name: alpine:latest
     volumes: 
       - {{.Env.PWD}}:/build
   script: 
     - cd /build
     - ls
-    {{include "build"}}
   on_failure: 

@@ -102,6 +102,38 @@ And all sprig functions ==> [Documentation](http://masterminds.github.io/sprig/)
 # Use inside Pipeline
 There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
 
+# parallel execution
+
+You can use same stage for different commands
+
+```
+buildDocker: 
+  stage: stagename
+  color: "{{$root.Colors.red}}"
+  script: 
+    - docker build -t {{$root.Vars.dockername}}:{{$root.Vars.version}} -f {{$root.Vars.dockerfile}} .
+  on_failure: 
+    - docker rmi {{$root.Vars.dockername}}:{{$root.Vars.version}}
+```
+Now you can run by stagename instand of Command name with: 
+
+```
+gomake srun stagename
+```
+
+**Hint** Color can help you make it better to read at 
+
+Possible Colors: 
+ - black
+ - red
+ - green
+ - yellow
+ - purple
+ - magenta
+ - teal
+ - white
+
+
 
 # Use Docker-Images
 

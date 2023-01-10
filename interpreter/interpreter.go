@@ -3,21 +3,44 @@ package interpreter
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/fasibio/gomake/command"
 	nearfinder "github.com/fasibio/gomake/nearFinder"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
+var colorsMap map[string]string = map[string]string{
+	"black":   "\033[1;30m%s\033[0m",
+	"red":     "\033[1;31m%s\033[0m",
+	"green":   "\033[1;32m%s\033[0m",
+	"yellow":  "\033[1;33m%s\033[0m",
+	"purple":  "\033[1;34m%s\033[0m",
+	"magenta": "\033[1;35m%s\033[0m",
+	"teal":    "\033[1;36m%s\033[0m",
+	"white":   "\033[1;37m%s\033[0m",
+}
+
+func getColorKeyMap() map[string]string {
+	res := make(map[string]string)
+	for k := range colorsMap {
+		res[k] = k
+	}
+	return res
+}
+
 type TemplateData struct {
-	Vars map[string]any
-	Env  map[string]string
+	Vars   map[string]any
+	Env    map[string]string
+	Colors map[string]string
 }
 
 type Interpreter struct {
@@ -80,7 +103,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		}
 	}
 
-	varStr, err := r.getParsedTemplate("gomake_vars", varCommandArr[0], TemplateData{Env: env, Vars: tempVar})
+	varStr, err := r.getParsedTemplate("gomake_vars", varCommandArr[0], TemplateData{Env: env, Vars: tempVar, Colors: getColorKeyMap()})
 
 	if err != nil {
 		return nil, nil, err
@@ -105,7 +128,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		return nil, nil, err
 	}
 
-	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Vars: v, Env: env})
+	b, err := r.getParsedTemplate("gomake", varCommandArr[1], TemplateData{Vars: v, Env: env, Colors: getColorKeyMap()})
 	return b, variables, err
 }
 
@@ -128,7 +151,7 @@ func (r *Interpreter) Run() error {
 		return err
 	}
 	if r.DryRun {
-		return r.printDryRun(command, variables)
+		return r.printDryRun([]StageOperationWrapper{{Name: r.ExecuteCommand, Command: command[r.ExecuteCommand]}}, variables)
 	}
 
 	cmd := r.cmdHandler.SliceCommands(command[r.ExecuteCommand].Script)
@@ -137,11 +160,11 @@ func (r *Interpreter) Run() error {
 		cmd = getDockerCmd(cmd, image)
 	}
 
-	err = r.execCmd(executer, cmd)
+	err = r.execCmd(executer, cmd, log.Writer())
 	if err != nil {
 		if len(command[r.ExecuteCommand].On_Failure) > 0 {
 			fmt.Println("Script end with error so start onFailure Scripts ...")
-			err = r.execCmd(executer, r.cmdHandler.SliceCommands(command[r.ExecuteCommand].On_Failure))
+			err = r.execCmd(executer, r.cmdHandler.SliceCommands(command[r.ExecuteCommand].On_Failure), log.Writer())
 		} else {
 			fmt.Println("No onFailure Scripts found but got error")
 		}
@@ -149,11 +172,123 @@ func (r *Interpreter) Run() error {
 	return err
 }
 
-func (r *Interpreter) execCmd(executer, command string) error {
+type StageOperationWrapper struct {
+	Name    string
+	Command command.Operation
+}
+
+type StageOperationWrapperError struct {
+	StageOperationWrapper
+	error
+}
+
+func (w *StageOperationWrapper) Write(data []byte) (n int, err error) {
+
+	colorFunc := func(d ...interface{}) string { return fmt.Sprint(d...) }
+	if w.Command.Color != "" {
+		colorFunc = w.Color(colorsMap[w.Command.Color])
+
+	}
+	fmt.Print(colorFunc(w.Name + ":\t" + string(data)))
+	// fmt.Printf("%s:\t%s", w.ServiceName, string(data))
+	return len(data), nil
+}
+
+func (w *StageOperationWrapper) Color(colorString string) func(...interface{}) string {
+	sprint := func(args ...interface{}) string {
+		return fmt.Sprintf(colorString,
+			fmt.Sprint(args...))
+	}
+	return sprint
+}
+
+func (r *Interpreter) GetStageMap() (map[string][]StageOperationWrapper, command.MakeStruct, map[string]map[string]any, error) {
+	explizitMakeFile, variables, err := r.GetExecuteTemplate(string(r.commandFile), make(map[string]any))
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	c1, err := r.getMakeScripts(explizitMakeFile)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	stagesMap := make(map[string][]StageOperationWrapper)
+	for k, c := range c1 {
+		if c.Stage != "" {
+			_, ok := stagesMap[c.Stage]
+			if !ok {
+				stagesMap[c.Stage] = make([]StageOperationWrapper, 0)
+			}
+			stagesMap[c.Stage] = append(stagesMap[c.Stage], StageOperationWrapper{Name: k, Command: c})
+		}
+	}
+	return stagesMap, c1, variables, nil
+}
+
+// Stage running
+func (r *Interpreter) SRun() error {
+	stagesMap, c1, variables, err := r.GetStageMap()
+	if err != nil {
+		return err
+	}
+
+	if _, ok := stagesMap[r.ExecuteCommand]; !ok {
+		return fmt.Errorf("no command with stage %s found at makefile, did you mean \n%s", r.ExecuteCommand, nearfinder.ClosestMatch(r.ExecuteCommand, nearfinder.GetKeysOfMap(stagesMap), 2))
+	}
+
+	commands := make([]StageOperationWrapper, 0)
+	for _, c := range stagesMap[r.ExecuteCommand] {
+		tmpc, err := r.cmdHandler.GetExecutedCommandMakeScript(c.Name, c1)
+		if err != nil {
+			return err
+		}
+		commands = append(commands, StageOperationWrapper{Name: c.Name, Command: tmpc[c.Name]})
+	}
+
+	if r.DryRun {
+		return r.printDryRun(commands, variables)
+	}
+	w := sync.WaitGroup{}
+	errList := make([]StageOperationWrapperError, 0)
+	for _, c := range commands {
+		w.Add(1)
+		go func(operator StageOperationWrapper) {
+			cmd := r.cmdHandler.SliceCommands(operator.Command.Script)
+			if image := operator.Command.Image; image != nil {
+				cmd = getDockerCmd(cmd, image)
+			}
+			err := r.execCmd(r.executer, cmd, &operator)
+			if err != nil {
+				errList = append(errList, StageOperationWrapperError{
+					error:                 err,
+					StageOperationWrapper: operator,
+				})
+			}
+			w.Done()
+		}(c)
+	}
+	w.Wait()
+	var errres error = nil
+	if len(errList) > 0 {
+		for _, e := range errList {
+			if len(e.Command.On_Failure) > 0 {
+				e.Write([]byte(fmt.Sprintf("%s end with error so start onFailure Scripts ...", e.Name)))
+				err := r.execCmd(r.executer, r.cmdHandler.SliceCommands(e.Command.On_Failure), &e)
+				if err != nil {
+					errres = errors.Wrap(errres, err.Error())
+				}
+			} else {
+				e.Write([]byte(fmt.Sprintf("No OnFailer Script found but %s got error ", e.Name)))
+			}
+		}
+	}
+	return errres
+}
+
+func (r *Interpreter) execCmd(executer, command string, writer io.Writer) error {
 	cmd := exec.Command(executer, "-c", command)
 	cmd.Stdin = os.Stdin
-	cmd.Stdout = log.Writer()
-	cmd.Stderr = log.Writer()
+	cmd.Stdout = writer
+	cmd.Stderr = writer
 	return cmd.Run()
 }
 

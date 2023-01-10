@@ -122,6 +122,28 @@ func main() {
 				Action: runner.Run,
 				Before: runner.RunBefore,
 			},
+			{
+				ArgsUsage:    "{executed command name}",
+				Name:         "srun",
+				Usage:        fmt.Sprintf("Run commands from %s file  but it run all commands are inside the given stage and run this in parallel", GomakeDefaultFile),
+				BashComplete: runner.SRunBashComplete,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    DryRunCli,
+						EnvVars: []string{getFlagEnvByFlagName(DryRunCli)},
+						Value:   false,
+						Usage:   fmt.Sprintf("Only show template paresed %s but not execute it", GomakeDefaultFile),
+					},
+					&cli.StringSliceFlag{
+						Name:    VarsCli,
+						Aliases: []string{"v"},
+						EnvVars: []string{getFlagEnvByFlagName(VarsCli)},
+						Action:  runner.ExtraVariables,
+					},
+				},
+				Action: runner.SRun,
+				Before: runner.RunBefore,
+			},
 		},
 	}
 
@@ -184,6 +206,45 @@ func isFlagAtUseList(used []string, test string) bool {
 		}
 	}
 	return false
+}
+
+func (r *Runner) SRunBashComplete(c *cli.Context) {
+	r.Before(c)
+	r.RunBefore(c)
+	autoCompleteHelp := make([]string, 0)
+
+	for _, cs := range c.App.Commands {
+		if cs.Name == "srun" {
+			for _, csf := range cs.Flags {
+				for _, csfn := range csf.Names() {
+					if csfn == "help" || csfn == "h" {
+						continue
+					}
+					if csfn == DryRunCli {
+						if isFlagAtUseList(c.FlagNames(), csfn) {
+							continue
+						}
+					}
+					minusStr := "-"
+					if len(csfn) > 1 {
+						minusStr = "--"
+					}
+					autoCompleteHelp = append(autoCompleteHelp, fmt.Sprintf("%s%s", minusStr, csfn))
+				}
+			}
+		}
+	}
+	list, _, _, err := r.interpreter.GetStageMap()
+	if err != nil {
+		return
+	}
+	for k := range list {
+		autoCompleteHelp = append(autoCompleteHelp, k)
+	}
+
+	for _, v := range autoCompleteHelp {
+		fmt.Println(v)
+	}
 }
 
 func (r *Runner) RunBashComplete(c *cli.Context) {
@@ -278,6 +339,10 @@ func (r *Runner) Run(c *cli.Context) error {
 	return r.interpreter.Run()
 }
 
+func (r *Runner) SRun(c *cli.Context) error {
+	return r.interpreter.SRun()
+}
+
 func (r *Runner) Init(c *cli.Context) error {
 	_, err := os.Stat(GomakeDefaultFile)
 	if err != nil {
@@ -302,8 +367,17 @@ func (r *Runner) List(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("List of executed Commands:")
+	fmt.Println("List of executed Commands (for run):")
 	for k := range list {
+		fmt.Println(k)
+	}
+
+	fmt.Println("\nList of executed Stages (for srun):")
+	stages, _, _, err := r.interpreter.GetStageMap()
+	if err != nil {
+		return err
+	}
+	for k := range stages {
 		fmt.Println(k)
 	}
 	return nil

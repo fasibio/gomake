@@ -13,6 +13,8 @@ type Operation struct {
 	Script     []string
 	Image      *DockerOperation
 	On_Failure []string
+	Stage      string
+	Color      string
 }
 
 type DockerOperation struct {
@@ -122,6 +124,8 @@ func (c *CommandHandler) GetExecutedCommandMakeScript(cmd string, data MakeStruc
 		Script:     commands,
 		On_Failure: onFailer,
 		Image:      data[cmd].Image,
+		Color:      data[cmd].Color,
+		Stage:      data[cmd].Stage,
 	}
 	return res, nil
 }

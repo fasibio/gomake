@@ -12,11 +12,16 @@ type DryRunOutput struct {
 	ExecutedCommand command.Operation
 }
 
-func (i Interpreter) printDryRun(command command.MakeStruct, variables map[string]map[string]any) error {
-	out, err := yaml.Marshal(DryRunOutput{
-		Vars:            variables["vars"],
-		ExecutedCommand: command[i.ExecuteCommand],
-	})
+type SDryRunOutput map[string]any
+
+func (i Interpreter) printDryRun(command []StageOperationWrapper, variables map[string]map[string]any) error {
+
+	outPutData := make(SDryRunOutput)
+	outPutData["vars"] = variables["vars"]
+	for _, c := range command {
+		outPutData[c.Name] = c.Command
+	}
+	out, err := yaml.Marshal(outPutData)
 	if err != nil {
 		return err
 	}
