@@ -135,7 +135,6 @@ func (r *Interpreter) Run() error {
 	executer := r.executer
 	if image := command[r.ExecuteCommand].Image; image != nil {
 		cmd = getDockerCmd(cmd, image)
-		log.Println(cmd)
 	}
 
 	err = r.execCmd(executer, cmd)
