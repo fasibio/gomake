@@ -107,7 +107,7 @@ There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
 
 You can use same stage for different commands
 
-```
+```yaml
 buildBin: 
   stage: build
   color: "{{$root.Colors.purple}}"
@@ -154,7 +154,7 @@ Possible Colors ({{.Colors.red}}):
 docker cli required
 
 To execute inside a dockerimage you can use like this: 
-```
+```yaml
 buildContainer: 
   image: 
     name: golang:latest # required
