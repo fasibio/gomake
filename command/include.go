@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"log"
 	"text/template"
 )
 
@@ -24,7 +23,6 @@ func (i *IncludeCommand) GetFuncMap() template.FuncMap {
 
 func (i *IncludeCommand) Execute(cmd string, makefile MakeStruct, listType CommandListType) ([]string, error) {
 	if _, ok := makefile[cmd]; !ok {
-		log.Println(makefile)
 		return []string{}, fmt.Errorf("%s not exist, so can not include", cmd)
 	}
 	var list []string

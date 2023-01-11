@@ -13,6 +13,7 @@ COMMANDS:
    init          Crate a starter gomake.yml to current dir
    ls            List all commands described at gomake yaml file
    run           Run commands from gomake.yml file
+   srun          Run commands from gomake.yml file  but it run all commands are inside the given stage and run this in parallel
    help, h       Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -107,8 +108,13 @@ There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
 You can use same stage for different commands
 
 ```
+buildBin: 
+  stage: build
+  color: "{{$root.Colors.purple}}"
+  script: 
+    - echo build
 buildDocker: 
-  stage: stagename
+  stage: build
   color: "{{$root.Colors.red}}"
   script: 
     - docker build -t {{$root.Vars.dockername}}:{{$root.Vars.version}} -f {{$root.Vars.dockerfile}} .
@@ -118,12 +124,20 @@ buildDocker:
 Now you can run by stagename instand of Command name with: 
 
 ```
-gomake srun stagename
+gomake srun build
 ```
 
-**Hint** Color can help you make it better to read at 
+or show the result after template execution: 
 
-Possible Colors: 
+```
+gomake srun --dry-run build
+```
+
+**Hint** 
+
+Color can help you make it easier to read:
+
+Possible Colors ({{.Colors.red}}): 
  - black
  - red
  - green
