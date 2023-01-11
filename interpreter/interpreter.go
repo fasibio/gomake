@@ -123,6 +123,10 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 		}
 	}
 
+	if len(variables["vars"]) == 0 {
+		variables["vars"] = make(map[string]any)
+	}
+
 	v, err := r.cmdHandler.ExecuteVariablesCommands(variables["vars"])
 	if err != nil {
 		return nil, nil, err
