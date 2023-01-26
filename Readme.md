@@ -91,6 +91,11 @@ sudo wget -O /usr/bin/gomake https://github.com/fasibio/gomake/releases/download
 **includeFile**
 include all variables and commands from an other lokal file
 
+Possible kind of usage: 
+- path ==> example (```{{includeFile "./gomake_helper.yml"}}```)
+- wildcard ==> example (```{{includeFile "./gomake_*.yml"}}```)
+- url ==> example (```{{includeFile "https://raw.githubusercontent.com/fasibio/gomake/main/gomake_helper.yml"}}```)
+
 **include**
 other commands script or onFailure depands of position of command
 

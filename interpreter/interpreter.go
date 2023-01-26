@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"text/template"
@@ -302,18 +305,24 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 
 	funcMap := r.cmdHandler.GetFuncMap()
 	funcMap["includeFile"] = func(name string) string {
-		f, err := os.ReadFile(name)
+		files, err := GetContent(name)
 		if err != nil {
 			log.Panic(err)
 		}
-		b, variables, err := r.GetExecuteTemplate(string(f), data.Vars)
-		if err != nil {
-			log.Panic(err)
+		res := strings.Builder{}
+
+		for _, f := range files {
+			b, variables, err := r.GetExecuteTemplate(string(f), data.Vars)
+			if err != nil {
+				log.Panic(err)
+			}
+			for k, v := range variables["vars"] {
+				data.Vars[k] = v
+			}
+			res.Write(b)
+			res.WriteString("\n")
 		}
-		for k, v := range variables["vars"] {
-			data.Vars[k] = v
-		}
-		return string(b)
+		return res.String()
 	}
 	sprigFunc := sprig.FuncMap()
 	for k, v := range sprigFunc {
@@ -326,4 +335,39 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 	}
 	t.Execute(&buf, data)
 	return buf.Bytes(), nil
+}
+
+func GetContent(path string) ([]string, error) {
+	var contents []string
+	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+		resp, err := http.Get(path)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, string(bytes))
+	} else if strings.Contains(path, "*") {
+		files, err := filepath.Glob(path)
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			bytes, err := ioutil.ReadFile(file)
+			if err != nil {
+				return nil, err
+			}
+			contents = append(contents, string(bytes))
+		}
+	} else {
+		bytes, err := ioutil.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		contents = append(contents, string(bytes))
+	}
+	return contents, nil
 }

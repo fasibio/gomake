@@ -26,12 +26,14 @@ install:
   on_failure: 
     - echo "Error"
     {{include "execute"}}
+
 execute: 
   script:
     - echo "execute"
     {{include "extern"}}
   on_failure: 
     - echo "execute Error"
+    
 extern: 
   script:
     - echo "extern"
