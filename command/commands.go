@@ -53,9 +53,6 @@ func (c *CommandHandler) registerStandardHandler() {
 	c.RegisterHandler(&IncludeCommand{
 		handler: *c,
 	})
-	c.RegisterHandler(&ShellCommand{
-		handler: *c,
-	})
 }
 
 func (c *CommandHandler) ExecuteVariablesCommands(variabels map[string]any) (map[string]any, error) {

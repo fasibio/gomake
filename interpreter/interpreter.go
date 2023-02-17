@@ -108,6 +108,7 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 
 	varStr, err := r.getParsedTemplate("gomake_vars", varCommandArr[0], TemplateData{Env: env, Vars: tempVar, Colors: getColorKeyMap()})
 
+	log.Println(string(varStr))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -304,8 +305,20 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 	var buf bytes.Buffer
 
 	funcMap := r.cmdHandler.GetFuncMap()
+	funcMap["shell"] = func(cmd string) string {
+		cmdRunner := exec.Command("/bin/sh", "-c", cmd)
+		buf := new(bytes.Buffer)
+		cmdRunner.Stdout = buf
+		cmdRunner.Stderr = log.Writer()
+
+		err := cmdRunner.Run()
+		if err != nil {
+			log.Panic(err)
+		}
+		return buf.String()
+	}
 	funcMap["includeFile"] = func(name string) string {
-		files, err := GetContent(name)
+		files, err := GetContents(name)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -337,7 +350,7 @@ func (r *Interpreter) getParsedTemplate(templateName, tmpl string, data Template
 	return buf.Bytes(), nil
 }
 
-func GetContent(path string) ([]string, error) {
+func GetContents(path string) ([]string, error) {
 	var contents []string
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		resp, err := http.Get(path)
