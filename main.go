@@ -369,7 +369,7 @@ func (r *Runner) List(c *cli.Context) error {
 	}
 	fmt.Println("List of executed Commands (for run):")
 	for k := range list {
-		fmt.Println(k)
+		fmt.Printf("%s  %s \n", k, list[k].Doc)
 	}
 
 	fmt.Println("\nList of executed Stages (for srun):")

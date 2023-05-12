@@ -1,8 +1,10 @@
 package interpreter
 
 import (
+	"bytes"
 	"fmt"
 
+	"github.com/andreazorzetto/yh/highlight"
 	"github.com/fasibio/gomake/command"
 	"gopkg.in/yaml.v2"
 )
@@ -25,6 +27,8 @@ func (i Interpreter) printDryRun(command []StageOperationWrapper, variables map[
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(out))
-	return nil
+	reader := bytes.NewReader(out)
+	r, err := highlight.Highlight(reader)
+	fmt.Print(r)
+	return err
 }

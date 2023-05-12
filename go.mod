@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/andreazorzetto/yh v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/urfave/cli/v2 v2.23.7
@@ -17,6 +18,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/huandu/xstrings v1.3.3 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
+	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect

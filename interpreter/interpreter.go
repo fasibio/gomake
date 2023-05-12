@@ -108,7 +108,6 @@ func (r *Interpreter) GetExecuteTemplate(file string, extraVariables map[string]
 
 	varStr, err := r.getParsedTemplate("gomake_vars", varCommandArr[0], TemplateData{Env: env, Vars: tempVar, Colors: getColorKeyMap()})
 
-	log.Println(string(varStr))
 	if err != nil {
 		return nil, nil, err
 	}

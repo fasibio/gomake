@@ -23,6 +23,7 @@ buildAll:
 
 build: 
   stage: b
+  doc: create a Binary for each GOOS and GOARCH
   color: "{{$root.Colors.purple}}"
   script: 
     - mkdir {{.Vars.dist}}

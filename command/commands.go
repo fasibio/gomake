@@ -10,11 +10,12 @@ import (
 type MakeStruct map[string]Operation
 
 type Operation struct {
-	Script     []string
-	Image      *DockerOperation
-	On_Failure []string
-	Stage      string
-	Color      string
+	Script     []string         `yaml:"script,omitempty"`
+	Doc        string           `yaml:"doc,omitempty"`
+	Image      *DockerOperation `yaml:"image,omitempty"`
+	On_Failure []string         `yaml:"on_failure,omitempty"`
+	Stage      string           `yaml:"stage,omitempty"`
+	Color      string           `yaml:"color,omitempty"`
 }
 
 type DockerOperation struct {

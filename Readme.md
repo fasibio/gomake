@@ -33,6 +33,7 @@ vars:
   AB: {{$bval}}B
 ---
 install:
+  doc: I'm a description what this command do
   script: 
     - touch test.gomake.txt
     - echo "Hallo" > test.gomake.txt
@@ -113,7 +114,7 @@ There is a [Dockerimage](https://hub.docker.com/r/fasibio/gomake)
 You can use same stage for different commands
 
 ```yaml
-buildBin: 
+buildBin:
   stage: build
   color: "{{$root.Colors.purple}}"
   script: 
