@@ -9,7 +9,6 @@ github.com/Masterminds/semver/v3
 github.com/Masterminds/sprig/v3
 # github.com/andreazorzetto/yh v0.4.0
 ## explicit; go 1.15
-github.com/andreazorzetto/yh
 github.com/andreazorzetto/yh/highlight
 # github.com/cpuguy83/go-md2man/v2 v2.0.2
 ## explicit; go 1.11
@@ -47,7 +46,7 @@ github.com/shopspring/decimal
 # github.com/spf13/cast v1.3.1
 ## explicit
 github.com/spf13/cast
-# github.com/urfave/cli/v2 v2.23.7
+# github.com/urfave/cli/v2 v2.25.3
 ## explicit; go 1.18
 github.com/urfave/cli/v2
 # github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673
