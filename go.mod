@@ -7,7 +7,7 @@ require (
 	github.com/andreazorzetto/yh v0.4.0
 	github.com/pkg/errors v0.9.1
 	github.com/schollz/closestmatch v2.1.0+incompatible
-	github.com/urfave/cli/v2 v2.25.7
+	github.com/urfave/cli/v2 v2.26.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
