@@ -41,7 +41,7 @@ jobs:
       #     version: latest
       #     args: release --rm-dist
       - name: Upload assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gomake
           path: ./dist/*
